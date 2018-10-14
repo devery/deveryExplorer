@@ -1,7 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App.jsx';
-import AppTest from './AppTest.jsx';
 import RouterTest from './RouterTest.jsx';
 
 ReactDOM.render(

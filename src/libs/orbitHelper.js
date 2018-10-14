@@ -5,60 +5,15 @@ const OrbitDB = require('orbit-db');
 let ipfs;
 let orbitdb;
 
-export const startDb = async () => {
-  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-  orbitdb = new OrbitDB(ipfs);
-  let db = await orbitdb.log('hello');
+/**
+Helper library for using OrbitDB.
+https://github.com/orbitdb/orbit-db
+**/
 
-  db = await orbitdb.keyvalue('first-database');
-  await db.load();
-  console.log(db.address.toString());
-
-  let value = db.get('name');
-  console.log(value);
-  await db.put('name', 'john');
-
-  value = db.get('name');
-  console.log(value);
-  // /orbitdb/Qmeh81koUnU5a6XE177a4Pn8Np34YwCniVj3yLgzqZMC8s/first-database
-};
-
-export const docsDb = async () => {
-  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-  orbitdb = new OrbitDB(ipfs);
-  const db = await orbitdb.docs('tests');
-  await db.load();
-  console.log(db.address.toString());
-
-  await db.put({ _id: new Date(), name: 'WHOOP', followers: 500 });
-  const all = db.query(doc => doc.followers >= 1);
-  console.log(all);
-
-  if (all.length === 0) {
-    console.log('Loading example data...');
-  }
-};
-
-export const LoadUsersCar = async UserAccount => {
-  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-  orbitdb = new OrbitDB(ipfs);
-  const db = await orbitdb.docs('cars');
-  await db.load();
-
-  console.log('User: ' + UserAccount);
-
-  const all = db.query(doc => doc.owner == UserAccount);
-
-  if (all.length === 0) {
-    console.log('No Owner Cars');
-  } else {
-    console.log('Owner Cars: ');
-    console.log(all);
-  }
-};
 
 export const LoadCars = async () => {
   /*
+  Loads all car objects from cars db.
   {
     "_id": "bdb19370-ce3e-4799-b619-c53889180ee6",
     "owner": "0xf8b908e7dbb3a0f2581aa8f1962f9360e10dc059",
@@ -75,6 +30,7 @@ export const LoadCars = async () => {
   orbitdb = new OrbitDB(ipfs);
   const db = await orbitdb.docs('cars');
   await db.load();
+  console.log(db.address.toString())
 
   const all = db.query(doc => doc);
 
@@ -88,26 +44,11 @@ export const LoadCars = async () => {
   return all;
 };
 
-export const LoadServices = async () => {
-  console.log('Loading Services...');
-  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-  orbitdb = new OrbitDB(ipfs);
-  const db = await orbitdb.docs('services');
-  await db.load();
-
-  const all = db.query(doc => doc);
-
-  if (all.length == 0) {
-    console.log('No Services');
-    return [];
-  } else {
-    console.log('Services: ');
-    console.log(all);
-    return all;
-  }
-};
 
 export const saveCar = async Car => {
+  /*
+  Saves a new car object to cars db.
+  */
   console.log('Saving car...');
   console.log(Car);
   ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
@@ -119,19 +60,17 @@ export const saveCar = async Car => {
   console.log('Ok.');
 };
 
-export const saveService = async Service => {
-  console.log('Saving service...');
-  console.log(Service);
-  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-  orbitdb = new OrbitDB(ipfs);
-  const db = await orbitdb.docs('services');
-  await db.load();
-
-  const hash = await db.put(Service);
-  console.log('Ok.');
-};
 
 export const LoadBrands = async () => {
+  /*
+  Loads all brand objects from cars db.
+
+  const newbrand = {
+    _id: uuid.v4(),
+    address: Addr,
+    name: Name
+  };
+  */
   console.log('Loading Brands...')
   ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
   orbitdb = new OrbitDB(ipfs);
@@ -152,28 +91,7 @@ export const LoadBrands = async () => {
 
 export const saveRecord = async (DbName, Record) => {
   /*
-  const newbrand = {
-    _id: uuid.v4(),
-    address: Addr,
-    name: Name
-  };
-
-  Product DB:
-  {"_id":"eacdc32f-9b97-4dcd-b29f-642c2241624a","brand":"0xeefc64d684a2de1566b9a3368150cc882aa0b683","address":"0x9D827bbfE2D04e3c076384F5D659dE795e875C90","name": "Tyre","details":"PremiumTyre-17651","year":"2018","origin":"UK"}
-
-  const newItem = {
-    _id: uuid.v4(),
-    address: newItemAddress,
-    brandAddress: this.props.brandInfo.address,
-    brandName: this.props.brandInfo.name,
-    productId: this.props.product._id,
-    productName: this.props.product.name,
-    productDetail: this.props.product.detail,
-    carId: this.state.selectedCarId,
-    date: new Date()
-  };
-
-
+  Saves a new record, Record, to specified db, Dbname.
   */
 
   console.log('Saving record to: ' + DbName);
@@ -188,6 +106,17 @@ export const saveRecord = async (DbName, Record) => {
 };
 
 export const LoadBrandProducts = async (BrandAddress) => {
+  /*
+  Loads all product records for a specified brand.
+  Product DB:
+  {"_id":"eacdc32f-9b97-4dcd-b29f-642c2241624a",
+  "brand":"0xeefc64d684a2de1566b9a3368150cc882aa0b683",
+  "address":"0x9D827bbfE2D04e3c076384F5D659dE795e875C90",
+  "name": "Tyre",
+  "details":"PremiumTyre-17651",
+  "year":"2018",
+  "origin":"UK"}
+  */
   console.log('Loading Brands...')
   ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
   orbitdb = new OrbitDB(ipfs);
@@ -207,6 +136,20 @@ export const LoadBrandProducts = async (BrandAddress) => {
 };
 
 export const LoadCarItems = async (ID) => {
+  /*
+  Loads all item records for a specified car ID.
+  const newItem = {
+    _id: uuid.v4(),
+    address: newItemAddress,
+    brandAddress: this.props.brandInfo.address,
+    brandName: this.props.brandInfo.name,
+    productId: this.props.product._id,
+    productName: this.props.product.name,
+    productDetail: this.props.product.detail,
+    carId: this.state.selectedCarId,
+    date: new Date()
+  };
+  */
   console.log('Loading Items for: ' + ID);
   ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
   orbitdb = new OrbitDB(ipfs);
@@ -214,6 +157,46 @@ export const LoadCarItems = async (ID) => {
   await db.load();
 
   const all = db.query(doc => doc.carId == ID);
+
+  if (all.length == 0) {
+    console.log('No Items');
+    return [];
+  } else {
+    console.log('Items: ');
+    console.log(all);
+    return all;
+  }
+
+}
+
+export const LoadBrandItems = async (BrandAddress) => {
+    /*
+    Loads all item records for a specified brand address.
+    const newItem = {
+      _id: uuid.v4(),
+      address: newItemAddress,
+      brandAddress: this.props.brandInfo.address,
+      brandName: this.props.brandInfo.name,
+      productId: this.props.product._id,
+      productName: this.props.product.name,
+      productDetail: this.props.product.detail,
+      carId: this.state.selectedCarId,
+      date: new Date()
+    };
+    */
+  console.log('Loading Items for: ' + BrandAddress);
+  ipfs = new IPFS({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+  orbitdb = new OrbitDB(ipfs);
+  const db = await orbitdb.docs('items');
+  await db.load();
+
+  const all = db.query(doc => {
+
+      if (doc.brandAddress == undefined){
+        return false
+      }
+      return doc.brandAddress.toLowerCase() == BrandAddress.toLowerCase();
+  });
 
   if (all.length == 0) {
     console.log('No Items');

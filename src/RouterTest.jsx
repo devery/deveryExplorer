@@ -6,9 +6,7 @@ import {
   Route,
   Link
 } from 'react-router-dom'
-import Home from './App.jsx';
-import Services from './Services.jsx';
-import TestPage from './AppTest.jsx';
+import Explorer from './Explorer.jsx';
 
 class App extends Component {
     render() {
@@ -21,28 +19,14 @@ class App extends Component {
               <Navbar>
                 <Navbar.Header>
                   <Navbar.Brand>
-                    Auto Tracker
+                    <Link to="/">Devery Explorer</Link>
                   </Navbar.Brand>
                 </Navbar.Header>
-                <Nav>
-                  <NavItem eventKey={1} href="#" to="/">
-                    <Link to="/">Cars</Link>
-                  </NavItem>
-                  <NavItem eventKey={2} href="#">
-                    <Link to="/services">Manage Services</Link>
-                  </NavItem>
-                  <NavItem eventKey={3} href="#">
-                    <Link to="/explorer">Explorer</Link>
-                  </NavItem>
-                </Nav>
               </Navbar>
 
 
               <hr/>
-
-              <Route exact path="/" component={Home}/>
-              <Route path="/services" component={Services}/>
-              <Route path="/explorer" component={TestPage}/>
+              <Route exact path="/" component={Explorer}/>
             </div>
           </Router>
         </div>
