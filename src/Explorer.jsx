@@ -15,6 +15,9 @@ const dbHelper = require('./libs/orbitHelper');
 const DeveryRegistry = devery.DeveryRegistry;
 const deveryRegistryClient = new DeveryRegistry();
 
+const DeveryERC721 = devery.DeveryERC721;
+const deveryERC721Client = new DeveryERC721();
+
 class App extends Component {
   constructor(props, context) {
     super(props, context);
@@ -44,6 +47,8 @@ class App extends Component {
     this.handleAddDb = this.handleAddDb.bind(this);
 
     this.handleitemAddrChange = this.handleitemAddrChange.bind(this);
+    //OWNER INFO
+    this.handleOwnedProductsChange = this.handleOwnedProductsChange.bind(this);
 
     this.state = {
       info: '',
@@ -62,6 +67,7 @@ class App extends Component {
       checkBrandAddr: '',
       brandInfo: '',
       markProductAddr: '0x2a6aa0af60f753e020030d5fe7cf1a6da3de9a81',
+      checkOwnedProductsAddr: '',
 
       appAccounts: 'No Accounts Loaded',
       appInfo: 'No App Info Loaded',
@@ -351,6 +357,20 @@ class App extends Component {
     this.setState({itemCheckAddr: e.target.value});
   }
 
+  // OWNER INFO
+  handleGetProductsOwned(){
+    this.setState({ownedProducts: 'Getting Owned Products...'});
+    this.GetProductsOwned();
+  }
+
+  async GetProductsOwned(){
+    let addressArr2 = await deveryERC721Client.getProductsByOwner(this.state.checkOwnedProductsAddr);
+    this.setState({ownedProducts: addressArr2});
+  }
+  handleOwnedProductsChange(e){
+      this.setState({checkOwnedProductsAddr: e.target.value});
+  }
+
   render() {
     return (
       <div>
@@ -434,6 +454,16 @@ class App extends Component {
           <FormControl type="text" placeholder="Product Name" onChange={this.handleAddProductNameChange} />
           <br/>
           <Button bsStyle="primary" onClick={this.handleAddProduct}>Add Product</Button>
+        </FormGroup>
+
+        <h2>OWNER INFO</h2>
+        <FormGroup>
+          <ControlLabel>Get Owned Products:</ControlLabel>
+          <FormControl.Static>Enter an ETH Address to return all owned products</FormControl.Static>
+          <FormControl type="text" placeholder="Enter ETH Address" onChange={this.handleOwnedProductsChange}/>
+          <FormControl componentClass="textarea" value={this.state.ownedProducts}/>
+          <br/>
+          <Button bsStyle="primary" onClick={(e) => this.handleGetProductsOwned(e)}>Get Owned Products</Button>
         </FormGroup>
 
         <h2>MARKING</h2>
