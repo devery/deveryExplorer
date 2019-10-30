@@ -1,29 +1,17 @@
 import React, { Component } from 'react';
-import {
-  Jumbotron,
-  FormGroup,
-  ControlLabel,
-  Button,
-  FormControl,
-} from 'react-bootstrap';
+import { Button, ControlLabel, FormControl, FormGroup, Jumbotron, } from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 import uuid from 'uuid';
+import DeveryExplorer, { deveryERC721Client, deveryRegistryClient } from './libs/deveryHelper';
 
 const devery = require('@devery/devery');
 const dbHelper = require('./libs/orbitHelper');
-
-const DeveryRegistry = devery.DeveryRegistry;
-const deveryRegistryClient = new DeveryRegistry();
-
-const DeveryERC721 = devery.DeveryERC721;
-const deveryERC721Client = new DeveryERC721();
 
 class App extends Component {
   constructor(props, context) {
     super(props, context);
 
     this.handleInfoChange = this.handleInfoChange.bind(this);
-    this.handleProduct = this.handleProduct.bind(this);
     this.handleMark = this.handleMark.bind(this);
     this.handleGenerateItem = this.handleGenerateItem.bind(this);
     this.handleCheckItem = this.handleCheckItem.bind(this);
@@ -76,27 +64,16 @@ class App extends Component {
 
       productAccount: 'No Products Loaded',
 
-      itemCheckAddr: 'No Addr'
+      itemCheckAddr: 'No Addr',
     };
   }
 
-  componentWillMount() {
-    setInterval(() => this.checkMetaMask(), 1000);
-  }
-
-  checkMetaMask() {
-    // Checks for active MetaMask account info.
-    if(web3.eth.accounts[0] === undefined){
-      this.setState({
-        account: 'Please sign in to MetaMask.',
-      });
-      return;
-    }
-    if (web3.eth.accounts[0] !== this.state.account) {
-      this.setState({
-        account: web3.eth.accounts[0],
-      });
-    }
+  componentDidMount() {
+    DeveryExplorer.getAccount(async (account) => {
+      if (this.state.account === account) return;
+      this.setState({account});
+      await DeveryExplorer.checkAndUpdateAllowance(account);
+    })
   }
 
   handleitemAddrChange(e){
@@ -115,153 +92,74 @@ class App extends Component {
     this.setState({addBrandName: e.target.value});
   }
 
-  handleAddBrand(){
-    this.addBrand(this.state.addBrandAddr, this.state.addBrandName);
+  handleProductAddrChange(e) {
+    this.setState({ checkProductAddr: e.target.value });
   }
 
-  handleGetBrand(){
-    this.getBrand();
+  handleAddProductAddrChange(e) {
+    this.setState({ addProductAddr: e.target.value });
   }
 
-  handleProductAddrChange(e){
-    this.setState({checkProductAddr: e.target.value});
-  }
-
-  handleAddProductAddrChange(e){
-    this.setState({addProductAddr: e.target.value});
-  }
-
-  handleAddProductNameChange(e){
-    this.setState({addProductName: e.target.value});
-  }
-
-  handleAddProduct(){
-    this.addProduct(this.state.addProductAddr, this.state.addProductName);
-  }
-
-  handleGetProduct(){
-    this.getProduct();
+  handleAddProductNameChange(e) {
+    this.setState({ addProductName: e.target.value });
   }
 
   handleInfoChange(e) {
     this.setState({ info: e.target.value });
   }
 
-  handleProduct() {
-    this.getProduct();
-  }
-
-  handleMark() {
-    this.markItem();
-  }
-
-  handleGenerateItem() {
-    this.setState({itemAddress: devery.Utils.getRandomAddress() });
-  }
-
-  handleCheckItem() {
-    this.checkItemMarker();
-  }
-
-  handleSetAccount() {
-    this.SetAccount();
-  }
-
   handleMarkProductAddrChange(e) {
-    this.setState({markProductAddr: e.target.value});
+    this.setState({ markProductAddr: e.target.value });
   }
 
   handleSetAccountAddrChange(e) {
-    this.setState({ setAccountAddr: e.target.value});
+    this.setState({ setAccountAddr: e.target.value });
   }
 
   handleDbNameChange(e) {
-    this.setState({dbName: e.target.value});
+    this.setState({ dbName: e.target.value });
   }
 
   handleJsonChange(e) {
-    this.setState({jsonString: e.target.value});
+    this.setState({ jsonString: e.target.value });
   }
 
-  handleAddDb(){
-    console.log('saving to db: ' + this.state.dbName);
-    console.log(this.state.jsonString);
-    let js = JSON.parse(this.state.jsonString);
-    console.log(js);
-
-    this.SaveToDb(this.state.dbName, js);
+  handleAppAccountChange(e) {
+    this.setState({ appAccount: e.target.value });
   }
 
-  async SaveToDb(DbName, Record){
-    await dbHelper.saveRecord(DbName, Record);
+  handleItemCheckChange(e) {
+    this.setState({ itemCheckAddr: e.target.value });
   }
 
-  async SetAccount(){
-    console.log('Setting: ' + this.state.setAccountAddr)
-    await deveryRegistryClient.permissionMarker(this.state.setAccountAddr, true);
+  handleOwnedProductsChange(e) {
+    this.setState({ checkOwnedProductsAddr: e.target.value });
   }
 
-  async getApp() {
-    const noApps = await deveryRegistryClient.appAccountsLength();
-    this.setState({ noApps });
-
-    const app = await deveryRegistryClient.getApp(this.state.appAddress);
-    if (app.active) {
-      this.setState({ appName: app.appName });
-      let transaction = await deveryRegistryClient.updateApp("AutoApp", this.state.appAddress, 0, true);
-      await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
-    } else {
-      this.setState({ appName: "AutoApp doesn't exist. Creating..." });
-      this.createApp();
-    }
-
+  handleAddBrand() {
+    const { addBrandName, addBrandAddr } = this.state;
+    console.log(`Adding Brand: ${addBrandName}, ${addBrandAddr}`);
+    DeveryExplorer.addBrand(addBrandAddr, addBrandName);
   }
 
-  async createApp() {
-    try {
-      const transaction = await deveryRegistryClient.addApp(
-        'AutoApp',
-        this.state.appAddress,
-        0,
-      );
-      await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
-      // console.log('transaction address',transaction.hash);
-    } catch (err) {
-      console.log(err);
-      if (err.message.indexOf('User denied')) {
-        console.log('The user denied the transaction');
-        this.setState({ appName: 'The user denied the transaction' });
-      }
-    }
-  }
-
-  async getBrand() {
+  handleGetBrand() {
     this.setState({ brandInfo: 'Loading Brand Info...' });
-    const brand = await deveryRegistryClient.getBrand(this.state.checkBrandAddr);
-    if (!brand.active) {
-      console.log('No brand');
-      this.setState({ brandInfo: 'No Brand' });
-    } else {
-      console.log(brand);
-      this.setState({ brandInfo: brand });
-
-      let addressArr = await deveryRegistryClient.brandAccountsPaginated();
-    }
+    const brandInfo = DeveryExplorer.getBrand(this.state.checkBrandAddr);
+    this.setState({ brandInfo });
   }
 
-  async addBrand(Addr, Name){
-    console.log('Adding Brand: ' + Addr + ', ' + Name);
-    try {
-      const brand = await deveryRegistryClient.addBrand(Addr, Name);
-    }
-    catch (err) {
-      console.log(err);
-    }
+  handleAddProduct() {
+    const { addProductName } = this.state;
+
+    console.log(`Adding product:${addProductName}`);
+    DeveryExplorer.addProduct(addProductName);
   }
 
-  async getProduct() {
-    console.log('Getting Product info: ' + this.state.checkProductAddr);
-    const Product = await deveryRegistryClient.getProduct(this.state.checkProductAddr);
+  async handleGetProduct() {
+    const { checkProductAddr } = this.state;
+
+    console.log(`Getting Product info: ${checkProductAddr}`);
+    const Product = await deveryRegistryClient.getProduct(checkProductAddr);
     if (!Product.active) {
       console.log('No Product');
       this.setState({ productInfo: 'No product' });
@@ -271,25 +169,22 @@ class App extends Component {
     }
   }
 
-  async addProduct(Addr, Name){
-    console.log('Adding product: ' + Addr + ', ' + Name);
-    try {
-      const product = await deveryRegistryClient.addProduct(
-        Addr,
-        Name,
-        'Accredited: 7823B12AE',
-        1999,
-        'Kirknewton')
-    }
-    catch (err) {
-      console.log(err);
-    }
+  async handleMark() {
+    const { itemAddress, markProductAddr } = this.state;
+    const hash = await deveryRegistryClient.addressHash(itemAddress);
+
+    console.log(markProductAddr, hash);
+    await deveryRegistryClient.mark(markProductAddr, hash);
   }
 
-  async checkItemMarker() {
+  handleGenerateItem() {
+    this.setState({ itemAddress: devery.Utils.getRandomAddress() });
+  }
 
-    console.log('Checking Item: ' + this.state.itemCheckAddr)
-    const item = await deveryRegistryClient.check(this.state.itemCheckAddr);
+  async handleCheckItem() {
+    const { itemCheckAddr } = this.state;
+    console.log(`Checking Item: ${itemCheckAddr}`);
+    const item = await deveryRegistryClient.check(itemCheckAddr);
     this.setState({
       itemProductAccount: item.productAccount,
       itemBrandAccount: item.brandAccount,
@@ -297,78 +192,84 @@ class App extends Component {
     });
   }
 
-  async markItem() {
-    const hash = await deveryRegistryClient.addressHash(
-      this.state.itemAddress,
-    );
+  async handleSetAccount() {
+    const { setAccountAddr } = this.state;
+    console.log(`Setting: ${setAccountAddr}`);
+    await deveryRegistryClient.permissionMarker(setAccountAddr, true);
+  }
 
-    console.log(this.state.markProductAddr, hash);
-    await deveryRegistryClient.mark(this.state.markProductAddr, hash);
+  async getApp() {
+    const noApps = await deveryRegistryClient.appAccountsLength();
+    this.setState({ noApps });
+
+    const app = await deveryRegistryClient.getApp(this.state.appAddress);
+    if (app.active) {
+      this.setState({ appName: app.appName });
+      await deveryRegistryClient.updateApp("AutoApp", this.state.appAddress, 0, true);
+      await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
+    } else {
+      this.setState({ appName: "AutoApp doesn't exist. Creating..." });
+      try {
+        const transaction = await deveryRegistryClient.addApp(
+          'AutoApp',
+          this.state.appAddress,
+          0,
+        );
+        await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
+        console.log('transaction address',transaction.hash);
+      } catch (err) {
+        console.log(err);
+        if (err.message.indexOf('User denied')) {
+          console.log('The user denied the transaction');
+          this.setState({ appName: 'The user denied the transaction' });
+        }
+      }
+    }
   }
 
   // APP INFO
-  handleGetAppAccounts(){
-    this.setState({appAccounts: 'Getting App Accounts...'});
-    this.GetAppAcounts();
+  async handleGetAppAccounts() {
+    this.setState({ appAccounts: 'Getting App Accounts...' });
+    const appAccounts = await deveryRegistryClient.appAccountsPaginated();
+    this.setState({ appAccounts });
   }
 
-  async GetAppAcounts(){
-    let addressArr = await deveryRegistryClient.appAccountsPaginated();
-    this.setState({appAccounts: addressArr});
-  }
-
-  handleAppAccountChange(e) {
-    this.setState({appAccount: e.target.value});
-  }
-
-  handleGetApp(){
-    this.setState({appInfo: 'Getting App Info...'});
-    this.GetAppInfo();
-  }
-
-  async GetAppInfo(){
-    let info = await deveryRegistryClient.getApp(this.state.appAccount);
-    this.setState({appInfo: info});
+  async handleGetApp() {
+    this.setState({ appInfo: 'Getting App Info...' });
+    const appInfo = await deveryRegistryClient.getApp(this.state.appAccount);
+    this.setState({ appInfo });
   }
 
   // BRAND INFO
-  handleGetBrandAccounts(){
-    this.setState({brandAccounts: 'Getting Brand Accounts...'});
-    this.GetBrandAcounts();
-  }
-
-  async GetBrandAcounts(){
-    let addressArr = await deveryRegistryClient.brandAccountsPaginated();
-    this.setState({brandAccounts: addressArr});
+  async handleGetBrandAccounts() {
+    this.setState({ brandAccounts: 'Getting Brand Accounts...' });
+    const brandAccounts = await deveryRegistryClient.brandAccountsPaginated();
+    this.setState({ brandAccounts });
   }
 
   // PRODUCT INFO
-  handleGetProductAccounts(){
-    this.setState({productAccounts: 'Getting Product Accounts...'});
-    this.GetProductAcounts();
-  }
-
-  async GetProductAcounts(){
-    let addressArr = await deveryRegistryClient.productAccountsPaginated();
-    this.setState({productAccounts: addressArr});
-  }
-
-  handleItemCheckChange(e){
-    this.setState({itemCheckAddr: e.target.value});
+  async handleGetProductAccounts() {
+    this.setState({ productAccounts: 'Getting Product Accounts...' });
+    const productAccounts = await deveryRegistryClient.productAccountsPaginated();
+    this.setState({ productAccounts });
   }
 
   // OWNER INFO
-  handleGetProductsOwned(){
-    this.setState({ownedProducts: 'Getting Owned Products...'});
-    this.GetProductsOwned();
+  async handleGetProductsOwned() {
+    this.setState({ ownedProducts: 'Getting Owned Products...' });
+    const ownedProducts = await deveryERC721Client.getProductsByOwner(this.state.checkOwnedProductsAddr);
+    this.setState({ ownedProducts });
   }
 
-  async GetProductsOwned(){
-    let addressArr2 = await deveryERC721Client.getProductsByOwner(this.state.checkOwnedProductsAddr);
-    this.setState({ownedProducts: addressArr2});
-  }
-  handleOwnedProductsChange(e){
-      this.setState({checkOwnedProductsAddr: e.target.value});
+  async handleAddDb() {
+    const { dbName, jsonString } = this.state;
+
+    console.log(`saving to db: ${dbName}`);
+    console.log(jsonString);
+    const js = JSON.parse(jsonString);
+    console.log(js);
+
+    await dbHelper.saveRecord(dbName, js);
   }
 
   render() {
