@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Button, ControlLabel, FormControl, FormGroup, Jumbotron, } from 'react-bootstrap';
 import { hot } from 'react-hot-loader';
 import uuid from 'uuid';
-import DeveryExplorer, { deveryERC721Client, deveryRegistryClient } from './libs/deveryHelper';
+import DeveryExplorer from './libs/deveryHelper';
 
 const devery = require('@devery/devery');
 const dbHelper = require('./libs/orbitHelper');
@@ -11,257 +11,138 @@ class App extends Component {
   constructor(props, context) {
     super(props, context);
 
-    this.handleInfoChange = this.handleInfoChange.bind(this);
-    this.handleMark = this.handleMark.bind(this);
-    this.handleGenerateItem = this.handleGenerateItem.bind(this);
-    this.handleCheckItem = this.handleCheckItem.bind(this);
-    this.handleGetBrand = this.handleGetBrand.bind(this);
-    this.handleBrandAddrChange = this.handleBrandAddrChange.bind(this);
-    this.handleAddBrandAddrChange = this.handleAddBrandAddrChange.bind(this);
-    this.handleAddBrandNameChange = this.handleAddBrandNameChange.bind(this);
-    this.handleAddBrand = this.handleAddBrand.bind(this);
-    this.handleSetAccount = this.handleSetAccount.bind(this);
-    this.handleMarkProductAddrChange = this.handleMarkProductAddrChange.bind(this);
-    this.handleSetAccountAddrChange = this.handleSetAccountAddrChange.bind(this);
-
-    this.handleGetProduct = this.handleGetProduct.bind(this);
-    this.handleProductAddrChange = this.handleProductAddrChange.bind(this);
-    this.handleAddProductAddrChange = this.handleAddProductAddrChange.bind(this);
-    this.handleAddProductNameChange = this.handleAddProductNameChange.bind(this);
-    this.handleAddProduct = this.handleAddProduct.bind(this);
-
-    this.handleDbNameChange = this.handleDbNameChange.bind(this);
-    this.handleJsonChange = this.handleJsonChange.bind(this);
-    this.handleAddDb = this.handleAddDb.bind(this);
-
-    this.handleitemAddrChange = this.handleitemAddrChange.bind(this);
-    //OWNER INFO
-    this.handleOwnedProductsChange = this.handleOwnedProductsChange.bind(this);
-
     this.state = {
-      info: '',
+      account: 'Please sign in to MetaMask',
       appAddress: '0xf8b908e7DBb3a0f2581aa8F1962f9360e10DC059',
-      appName: 'Not Loaded',
       brandAddr: '0xf8b908e7DBb3a0f2581aa8F1962f9360e10DC059',
-      brandName: 'Not Loaded',
       productAddress: '0x2a6aa0af60f753e020030d5fe7cf1a6da3de9a81',
-      productName: 'Not Loaded',
+      markProductAddr: '0x2a6aa0af60f753e020030d5fe7cf1a6da3de9a81',
+      info: '',
       itemAddress: '',
+      tokenFromAddr: '',
+      tokenToAddr: '',
+      tokenId: '',
       itemProductAccount: '',
       itemBrandAccount: '',
       itemAppAccount: '',
-      noApps: '0',
-      account: 'Please sign in to MetaMask',
       checkBrandAddr: '',
       brandInfo: '',
-      markProductAddr: '0x2a6aa0af60f753e020030d5fe7cf1a6da3de9a81',
       checkOwnedProductsAddr: '',
-
+      appName: 'Not Loaded',
+      brandName: 'Not Loaded',
+      productName: 'Not Loaded',
       appAccounts: 'No Accounts Loaded',
       appInfo: 'No App Info Loaded',
-
       brandAccounts: 'No Accounts Loaded',
-
       productAccount: 'No Products Loaded',
-
       itemCheckAddr: 'No Addr',
+      noApps: '0',
     };
   }
 
   componentDidMount() {
-    DeveryExplorer.getAccount(async (account) => {
+    DeveryExplorer.getAccount(async account => {
       if (this.state.account === account) return;
-      this.setState({account});
+      this.setState({ account });
       await DeveryExplorer.checkAndUpdateAllowance(account);
     })
   }
 
-  handleitemAddrChange(e){
-    this.setState({itemAddress: e.target.value});
-  }
+  handleChangeState = field => event => this.setState({[field]: event.target.value});
 
-  handleBrandAddrChange(e){
-    this.setState({checkBrandAddr: e.target.value});
-  }
-
-  handleAddBrandAddrChange(e){
-    this.setState({addBrandAddr: e.target.value});
-  }
-
-  handleAddBrandNameChange(e){
-    this.setState({addBrandName: e.target.value});
-  }
-
-  handleProductAddrChange(e) {
-    this.setState({ checkProductAddr: e.target.value });
-  }
-
-  handleAddProductAddrChange(e) {
-    this.setState({ addProductAddr: e.target.value });
-  }
-
-  handleAddProductNameChange(e) {
-    this.setState({ addProductName: e.target.value });
-  }
-
-  handleInfoChange(e) {
-    this.setState({ info: e.target.value });
-  }
-
-  handleMarkProductAddrChange(e) {
-    this.setState({ markProductAddr: e.target.value });
-  }
-
-  handleSetAccountAddrChange(e) {
-    this.setState({ setAccountAddr: e.target.value });
-  }
-
-  handleDbNameChange(e) {
-    this.setState({ dbName: e.target.value });
-  }
-
-  handleJsonChange(e) {
-    this.setState({ jsonString: e.target.value });
-  }
-
-  handleAppAccountChange(e) {
-    this.setState({ appAccount: e.target.value });
-  }
-
-  handleItemCheckChange(e) {
-    this.setState({ itemCheckAddr: e.target.value });
-  }
-
-  handleOwnedProductsChange(e) {
-    this.setState({ checkOwnedProductsAddr: e.target.value });
-  }
-
-  handleAddBrand() {
+  handleAddBrand = () => {
     const { addBrandName, addBrandAddr } = this.state;
     console.log(`Adding Brand: ${addBrandName}, ${addBrandAddr}`);
     DeveryExplorer.addBrand(addBrandAddr, addBrandName);
-  }
+  };
 
-  handleGetBrand() {
+  handleGetBrand = () => {
     this.setState({ brandInfo: 'Loading Brand Info...' });
     const brandInfo = DeveryExplorer.getBrand(this.state.checkBrandAddr);
     this.setState({ brandInfo });
-  }
+  };
 
-  handleAddProduct() {
+  handleAddProduct = () => {
     const { addProductName } = this.state;
 
     console.log(`Adding product:${addProductName}`);
     DeveryExplorer.addProduct(addProductName);
-  }
+  };
 
-  async handleGetProduct() {
+  handleGetProduct = async () => {
     const { checkProductAddr } = this.state;
 
     console.log(`Getting Product info: ${checkProductAddr}`);
-    const Product = await deveryRegistryClient.getProduct(checkProductAddr);
-    if (!Product.active) {
-      console.log('No Product');
-      this.setState({ productInfo: 'No product' });
-    } else {
-      console.log(Product);
-      this.setState({ productInfo: Product });
-    }
-  }
+    const Product = await DeveryExplorer.getProduct(checkProductAddr);
+    this.setState({ productInfo: Product });
+  };
 
-  async handleMark() {
+  handleMark = async () => {
     const { itemAddress, markProductAddr } = this.state;
-    const hash = await deveryRegistryClient.addressHash(itemAddress);
+    await DeveryExplorer.markProduct(itemAddress, markProductAddr);
+  };
 
-    console.log(markProductAddr, hash);
-    await deveryRegistryClient.mark(markProductAddr, hash);
-  }
-
-  handleGenerateItem() {
+  handleGenerateItem = () => {
     this.setState({ itemAddress: devery.Utils.getRandomAddress() });
-  }
+  };
 
-  async handleCheckItem() {
+  handleCheckItem = async () => {
     const { itemCheckAddr } = this.state;
     console.log(`Checking Item: ${itemCheckAddr}`);
-    const item = await deveryRegistryClient.check(itemCheckAddr);
+    const item = await DeveryExplorer.checkItem(itemCheckAddr);
     this.setState({
       itemProductAccount: item.productAccount,
       itemBrandAccount: item.brandAccount,
       itemAppAccount: item.appAccount,
     });
-  }
+  };
 
-  async handleSetAccount() {
+  handleSetAccount = async () => {
     const { setAccountAddr } = this.state;
     console.log(`Setting: ${setAccountAddr}`);
-    await deveryRegistryClient.permissionMarker(setAccountAddr, true);
-  }
-
-  async getApp() {
-    const noApps = await deveryRegistryClient.appAccountsLength();
-    this.setState({ noApps });
-
-    const app = await deveryRegistryClient.getApp(this.state.appAddress);
-    if (app.active) {
-      this.setState({ appName: app.appName });
-      await deveryRegistryClient.updateApp("AutoApp", this.state.appAddress, 0, true);
-      await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
-    } else {
-      this.setState({ appName: "AutoApp doesn't exist. Creating..." });
-      try {
-        const transaction = await deveryRegistryClient.addApp(
-          'AutoApp',
-          this.state.appAddress,
-          0,
-        );
-        await deveryRegistryClient.permissionMarker(this.state.appAddress, true);
-        console.log('transaction address',transaction.hash);
-      } catch (err) {
-        console.log(err);
-        if (err.message.indexOf('User denied')) {
-          console.log('The user denied the transaction');
-          this.setState({ appName: 'The user denied the transaction' });
-        }
-      }
-    }
-  }
+    await DeveryExplorer.permissionMarker(setAccountAddr);
+  };
 
   // APP INFO
-  async handleGetAppAccounts() {
+  handleGetAppAccounts = async () => {
     this.setState({ appAccounts: 'Getting App Accounts...' });
-    const appAccounts = await deveryRegistryClient.appAccountsPaginated();
+    const appAccounts = await DeveryExplorer.getAppAccounts();
     this.setState({ appAccounts });
-  }
+  };
 
-  async handleGetApp() {
+  handleGetApp = async () => {
     this.setState({ appInfo: 'Getting App Info...' });
-    const appInfo = await deveryRegistryClient.getApp(this.state.appAccount);
+    const appInfo = await DeveryExplorer.getApp(this.state.appAccount);
     this.setState({ appInfo });
-  }
+  };
 
   // BRAND INFO
-  async handleGetBrandAccounts() {
+  handleGetBrandAccounts = async () => {
     this.setState({ brandAccounts: 'Getting Brand Accounts...' });
-    const brandAccounts = await deveryRegistryClient.brandAccountsPaginated();
+    const brandAccounts = await DeveryExplorer.getBrandAccounts();
     this.setState({ brandAccounts });
-  }
+  };
 
   // PRODUCT INFO
-  async handleGetProductAccounts() {
+  handleGetProductAccounts = async () => {
     this.setState({ productAccounts: 'Getting Product Accounts...' });
-    const productAccounts = await deveryRegistryClient.productAccountsPaginated();
+    const productAccounts = await DeveryExplorer.getProductAccounts();
     this.setState({ productAccounts });
-  }
+  };
 
   // OWNER INFO
-  async handleGetProductsOwned() {
+  handleGetProductsOwned = async () => {
     this.setState({ ownedProducts: 'Getting Owned Products...' });
-    const ownedProducts = await deveryERC721Client.getProductsByOwner(this.state.checkOwnedProductsAddr);
+    const ownedProducts = await DeveryExplorer.getProductsByOwner(this.state.checkOwnedProductsAddr);
     this.setState({ ownedProducts });
-  }
+  };
 
-  async handleAddDb() {
+  handleSafeTransfer = async () => {
+    const { fromAddress, toAddress, tokenId } = this.state;
+    await DeveryExplorer.safeTransferTo(fromAddress, toAddress, tokenId);
+  };
+
+  handleAddDb = async () => {
     const { dbName, jsonString } = this.state;
 
     console.log(`saving to db: ${dbName}`);
@@ -270,7 +151,7 @@ class App extends Component {
     console.log(js);
 
     await dbHelper.saveRecord(dbName, js);
-  }
+  };
 
   render() {
     return (
@@ -287,16 +168,16 @@ class App extends Component {
           <ControlLabel>Get App Accounts:</ControlLabel>
           <FormControl componentClass="textarea" value={this.state.appAccounts}/>
           <br/>
-          <Button bsStyle="primary" onClick={(e) => this.handleGetAppAccounts(e)}>Get App Accounts</Button>
+          <Button bsStyle="primary" onClick={this.handleGetAppAccounts}>Get App Accounts</Button>
         </FormGroup>
 
         <FormGroup>
           <ControlLabel>Get App:</ControlLabel>
           <FormControl.Static>App Info: active, appAccount, appName, fee, feeAccount</FormControl.Static>
-          <FormControl type="text" placeholder="App Address" onChange={(e) => this.handleAppAccountChange(e)}/>
+          <FormControl type="text" placeholder="App Address" onChange={this.handleChangeState('appAccount')}/>
           <FormControl componentClass="textarea" value={this.state.appInfo}/>
           <br/>
-          <Button bsStyle="primary" onClick={(e) => this.handleGetApp(e)}>Get App</Button>
+          <Button bsStyle="primary" onClick={this.handleGetApp}>Get App</Button>
         </FormGroup>
 
         <h2>BRAND INFO</h2>
@@ -306,13 +187,13 @@ class App extends Component {
           <FormControl.Static>This gets ALL brand accounts. i.e. Not just for your app.</FormControl.Static>
           <FormControl componentClass="textarea" value={this.state.brandAccounts}/>
           <br/>
-          <Button bsStyle="primary" onClick={(e) => this.handleGetBrandAccounts(e)}>Get Brand Accounts</Button>
+          <Button bsStyle="primary" onClick={this.handleGetBrandAccounts}>Get Brand Accounts</Button>
         </FormGroup>
 
         <FormGroup>
           <ControlLabel>Get Brand Info:</ControlLabel>
           <FormControl.Static>Brand Info: brandAccount, appAccount, brandName, active</FormControl.Static>
-          <FormControl type="text" placeholder="Enter Brand Address" onChange={this.handleBrandAddrChange}/>
+          <FormControl type="text" placeholder="Enter Brand Address" onChange={this.handleChangeState('checkBrandAddr')}/>
           <FormControl componentClass="textarea" value={this.state.brandInfo}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleGetBrand}>Get Brand Info</Button>
@@ -322,8 +203,8 @@ class App extends Component {
           <ControlLabel>Add A Brand:</ControlLabel>
           <FormControl.Static>Brands can only be added by app owner account so make sure correct MetaMask!</FormControl.Static>
           <FormControl.Static>Brand Account is basically the account that controls it (i.e. adding brand products) so it might be useful to use a MetaMask account.</FormControl.Static>
-          <FormControl type="text" placeholder="Brand Address" onChange={this.handleAddBrandAddrChange}/>
-          <FormControl type="text" placeholder="Brand Name" onChange={this.handleAddBrandNameChange}/>
+          <FormControl type="text" placeholder="Brand Address" onChange={this.handleChangeState('addBrandAddr')}/>
+          <FormControl type="text" placeholder="Brand Name" onChange={this.handleChangeState('addBrandName')}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleAddBrand}>Add Brand</Button>
         </FormGroup>
@@ -335,13 +216,13 @@ class App extends Component {
           <FormControl.Static>This gets ALL product accounts. i.e. Not just for your app/brand.</FormControl.Static>
           <FormControl componentClass="textarea" value={this.state.productAccounts}/>
           <br/>
-          <Button bsStyle="primary" onClick={(e) => this.handleGetProductAccounts(e)}>Get Product Accounts</Button>
+          <Button bsStyle="primary" onClick={this.handleGetProductAccounts}>Get Product Accounts</Button>
         </FormGroup>
 
         <FormGroup>
           <ControlLabel>Get Product Info:</ControlLabel>
           <FormControl.Static>Product Info: productAccount, brandAccount, description, details, year, origin, active</FormControl.Static>
-          <FormControl type="text" placeholder="Enter A Product Address" onChange={this.handleProductAddrChange}/>
+          <FormControl type="text" placeholder="Enter A Product Address" onChange={this.handleChangeState('checkProductAddr')}/>
           <FormControl componentClass="textarea" value={this.state.productInfo}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleGetProduct}>Get Product Info</Button>
@@ -351,8 +232,8 @@ class App extends Component {
           <ControlLabel>Add Product:</ControlLabel>
           <FormControl.Static>Product takes account that added it as its brand.</FormControl.Static>
           <FormControl.Static>If your MetaMask account doesn’t have a brand then you can’t add a product.</FormControl.Static>
-          <FormControl type="text" placeholder="Product Address" onChange={this.handleAddProductAddrChange}/>
-          <FormControl type="text" placeholder="Product Name" onChange={this.handleAddProductNameChange} />
+          <FormControl type="text" placeholder="Product Address" onChange={this.handleChangeState('addProductAddr')}/>
+          <FormControl type="text" placeholder="Product Name" onChange={this.handleChangeState('addProductName')} />
           <br/>
           <Button bsStyle="primary" onClick={this.handleAddProduct}>Add Product</Button>
         </FormGroup>
@@ -361,10 +242,10 @@ class App extends Component {
         <FormGroup>
           <ControlLabel>Get Owned Products:</ControlLabel>
           <FormControl.Static>Enter an ETH Address to return all owned products</FormControl.Static>
-          <FormControl type="text" placeholder="Enter ETH Address" onChange={this.handleOwnedProductsChange}/>
+          <FormControl type="text" placeholder="Enter ETH Address" onChange={this.handleChangeState('checkOwnedProductsAddr')}/>
           <FormControl componentClass="textarea" value={this.state.ownedProducts}/>
           <br/>
-          <Button bsStyle="primary" onClick={(e) => this.handleGetProductsOwned(e)}>Get Owned Products</Button>
+          <Button bsStyle="primary" onClick={this.handleGetProductsOwned}>Get Owned Products</Button>
         </FormGroup>
 
         <h2>MARKING</h2>
@@ -372,7 +253,7 @@ class App extends Component {
         <FormGroup>
           <ControlLabel>Allow Account To Mark:</ControlLabel>
           <FormControl.Static>An Account has to have permission set before it can Mark.</FormControl.Static>
-          <FormControl type="text" placeholder='Account To Set' onChange={this.handleSetAccountAddrChange}/>
+          <FormControl type="text" placeholder='Account To Set' onChange={this.handleChangeState('setAccountAddr')}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleSetAccount}>Set Account Permission</Button>
         </FormGroup>
@@ -382,10 +263,20 @@ class App extends Component {
           <FormControl.Static>You can only mark an item with a product from the products brand account.</FormControl.Static>
           <FormControl.Static>An item can be marked more than once but most recent state is only one recalled by check.</FormControl.Static>
           <FormControl.Static>Can generate a random Item address below.</FormControl.Static>
-          <FormControl type="text" placeholder='Product Address' onChange={this.handleMarkProductAddrChange}/>
-          <FormControl type="text" placeholder='Item Address' onChange={this.handleitemAddrChange}/>
+          <FormControl type="text" placeholder='Product Address' onChange={this.handleChangeState('markProductAddr')}/>
+          <FormControl type="text" placeholder='Item Address' onChange={this.handleChangeState('itemAddress')}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleMark}>Mark Item</Button>
+        </FormGroup>
+
+        <FormGroup>
+          <ControlLabel>Transfer token: </ControlLabel>
+          <FormControl.Static>Safe Transfer Token: current owner account address as fromAddress, new owner account address as toAddress, tokenId</FormControl.Static>
+          <FormControl type="text" placeholder='Product Address' onChange={this.handleChangeState('tokenFromAddr')}/>
+          <FormControl type="text" placeholder='Item Address' onChange={this.handleChangeState('tokenToAddr')}/>
+          <FormControl type="text" placeholder='Item Address' onChange={this.handleChangeState('tokenId')}/>
+          <br/>
+          <Button bsStyle="primary" onClick={this.handleSafeTransfer}>Generate Address</Button>
         </FormGroup>
 
         <FormGroup>
@@ -398,7 +289,7 @@ class App extends Component {
         <FormGroup>
           <ControlLabel>Check Item: </ControlLabel>
           <FormControl.Static>An item can be marked more than once but most recent state is only one recalled by check.</FormControl.Static>
-          <FormControl type="text" placeholder='Item Address To Check' onChange={(e) => this.handleItemCheckChange(e)}/>
+          <FormControl type="text" placeholder='Item Address To Check' onChange={this.handleChangeState('itemCheckAddr')}/>
           <p>itemProductAccount: {this.state.itemProductAccount}</p>
           <p>itemBrandAccount: {this.state.itemBrandAccount}</p>
           <p>itemAppAccount: {this.state.itemAppAccount}</p>
@@ -409,9 +300,9 @@ class App extends Component {
         <FormGroup controlId="formControlItem">
           <h4>Add To Db (Random ID: {uuid.v4()})</h4>
           <ControlLabel>DB Name:</ControlLabel>
-          <FormControl type="text" placeholder='i.e. brands' onChange={this.handleDbNameChange}/>
+          <FormControl type="text" placeholder='i.e. brands' onChange={this.handleChangeState('dbName')}/>
           <ControlLabel>JSON String:</ControlLabel>
-          <FormControl type="text" placeholder='i.e. {"result":true, "count":42} ' onChange={this.handleJsonChange}/>
+          <FormControl type="text" placeholder='i.e. {"result":true, "count":42} ' onChange={this.handleChangeState('jsonString')}/>
           <br/>
           <Button bsStyle="primary" onClick={this.handleAddDb}>Add To Db</Button>
         </FormGroup>

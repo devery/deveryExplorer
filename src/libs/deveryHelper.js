@@ -91,6 +91,24 @@ class DeveryExplorer {
     return deveryRegistryClient.productAccountsPaginated();
   }
 
+  checkItem(addr) {
+    return deveryRegistryClient.check(addr);
+  }
+
+  permissionMarker(addr, permission = true) {
+    return deveryRegistryClient.permissionMarker(addr, permission);
+  }
+
+  getProductsByOwner(addr) {
+    return deveryERC721Client.getProductsByOwner(addr);
+  }
+
+  async markProduct(itemAddress, markProductAddr) {
+    const hash = await deveryRegistryClient.addressHash(itemAddress);
+
+    return deveryRegistryClient.mark(markProductAddr, hash);
+  }
+
   async addApp(account, data) {
     try {
       await deveryRegistryClient.addApp(data, account, 0);
